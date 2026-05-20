@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Employee Management System – HR Database" />
+  <title>Employee Management System</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="styles.css" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">HR<strong>OS</strong></span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#">&#9632; Employees</a>
+      <a class="nav-item" href="#">&#9632; Departments</a>
+      <a class="nav-item" href="#">&#9632; Attendance</a>
+      <a class="nav-item" href="#">&#9632; Payroll</a>
+      <a class="nav-item" href="#">&#9632; Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">A</div>
+        <div>
+          <p class="user-name">Admin</p>
+          <p class="user-role">HR Manager</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <p class="topbar-breadcrumb">HR Portal &rsaquo; Employees</p>
+        <h1>Employee Database</h1>
+      </div>
+      <button id="btn-add" onclick="openModal()">+ Add Employee</button>
+    </header>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num" id="stat-total">0</span>
+        <span class="stat-lbl">Total Employees</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num green" id="stat-eng">0</span>
+        <span class="stat-lbl">Engineering</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num amber" id="stat-design">0</span>
+        <span class="stat-lbl">Design</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num blue" id="stat-other">0</span>
+        <span class="stat-lbl">Other Depts</span>
+      </div>
+    </div>
+
+    <!-- Table section -->
+    <section class="table-section">
+      <div class="table-toolbar">
+        <h2 class="section-title">All Employees</h2>
+        <span class="emp-badge" id="emp-count">0 records</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="emp-table" id="emp-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Date of Birth</th>
+              <th>Department</th>
+              <th>Skill</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="emp-tbody">
+            <tr id="empty-row">
+              <td colspan="6" class="empty-cell">
+                <div class="empty-state">
+                  <p class="empty-icon">&#128100;</p>
+                  <p class="empty-title">No employees yet</p>
+                  <p class="empty-sub">Click &ldquo;+ Add Employee&rdquo; to add your first record</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /main-area -->
+
+  <!-- Modal overlay -->
+  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeOnOverlay(event)">
+    <div class="modal" id="modal">
+
+      <div class="modal-header">
+        <div>
+          <p class="modal-label" id="modal-label">New record</p>
+          <h2 class="modal-title" id="modal-title">Add Employee</h2>
+        </div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Input table (form layout via HTML table) -->
+      <table class="input-table">
+        <tr>
+          <th><label for="emp-id">Employee ID</label></th>
+          <td><input type="text" id="emp-id" placeholder="EMP-013" /></td>
+        </tr>
+        <tr>
+          <th><label for="emp-name">Full Name</label></th>
+          <td><input type="text" id="emp-name" placeholder="Prince Kumar" /></td>
+        </tr>
+        <tr>
+          <th><label for="emp-dob">Date of Birth</label></th>
+          <td><input type="date" id="emp-dob" /></td>
+        </tr>
+        <tr>
+          <th><label for="emp-dept">Department</label></th>
+          <td>
+            <input type="text" id="emp-dept" placeholder="Engineering" list="dept-list" />
+            <datalist id="dept-list">
+              <option value="Engineering" />
+              <option value="Design" />
+              <option value="Product" />
+              <option value="QA" />
+              <option value="HR" />
+              <option value="Finance" />
+              <option value="Marketing" />
+            </datalist>
+          </td>
+        </tr>
+        <tr>
+          <th><label for="emp-skill">Skill</label></th>
+          <td><input type="text" id="emp-skill" placeholder="React, Node.js" /></td>
+        </tr>
+        <tr>
+          <th><label for="emp-password">Password</label></th>
+          <td><input type="password" id="emp-password" placeholder="Enter password" /></td>
+        </tr>
+      </table>
+
+      <!-- Form message -->
+      <p id="form-msg" class="form-msg hidden"></p>
+
+      <!-- Modal actions -->
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-ghost" onclick="clearForm()">Clear</button>
+        <button class="btn-primary" id="btn-save" onclick="saveEmployee()">Save Employee</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let employees = [];
+    let editingId = null;
+
+    function openModal() {
+      editingId = null;
+      clearForm();
+      document.getElementById('modal-label').textContent = 'New record';
+      document.getElementById('modal-title').textContent = 'Add Employee';
+      document.getElementById('btn-save').textContent = 'Save Employee';
+      document.getElementById('emp-id').disabled = false;
+      document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.add('hidden');
+      hideMsg();
+    }
+
+    function closeOnOverlay(e) {
+      if (e.target === document.getElementById('modal-overlay')) closeModal();
+    }
+
+    function saveEmployee() {
+      const id       = document.getElementById('emp-id').value.trim();
+      const name     = document.getElementById('emp-name').value.trim();
+      const dob      = document.getElementById('emp-dob').value;
+      const dept     = document.getElementById('emp-dept').value.trim();
+      const skill    = document.getElementById('emp-skill').value.trim();
+      const password = document.getElementById('emp-password').value.trim();
+
+      if (!id || !name || !dob || !dept || !skill || !password) {
+        showMsg('Please fill in all fields.', 'error'); return;
+      }
+
+      if (editingId === null) {
+        if (employees.find(e => e.id === id)) { showMsg('Employee ID already exists.', 'error'); return; }
+        employees.push({ id, name, dob, dept, skill, password });
+      } else {
+        const idx = employees.findIndex(e => e.id === editingId);
+        employees[idx] = { id, name, dob, dept, skill, password };
+        editingId = null;
+      }
+
+      renderTable();
+      updateStats();
+      closeModal();
+    }
+
+    function editEmployee(id) {
+      const emp = employees.find(e => e.id === id);
+      if (!emp) return;
+      editingId = id;
+      document.getElementById('emp-id').value       = emp.id;
+      document.getElementById('emp-id').disabled    = true;
+      document.getElementById('emp-name').value     = emp.name;
+      document.getElementById('emp-dob').value      = emp.dob;
+      document.getElementById('emp-dept').value     = emp.dept;
+      document.getElementById('emp-skill').value    = emp.skill;
+      document.getElementById('emp-password').value = emp.password;
+      document.getElementById('modal-label').textContent = 'Editing record';
+      document.getElementById('modal-title').textContent = 'Update Employee';
+      document.getElementById('btn-save').textContent    = 'Update Employee';
+      document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function deleteEmployee(id) {
+      employees = employees.filter(e => e.id !== id);
+      renderTable(); updateStats();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('emp-tbody');
+      tbody.innerHTML = '';
+
+      if (employees.length === 0) {
+        tbody.innerHTML = '<tr id="empty-row"><td colspan="6" class="empty-cell"><div class="empty-state"><p class="empty-icon">&#128100;</p><p class="empty-title">No employees yet</p><p class="empty-sub">Click &ldquo;+ Add Employee&rdquo; to add your first record</p></div></td></tr>';
+        document.getElementById('emp-count').textContent = '0 records';
+        return;
+      }
+
+      document.getElementById('emp-count').textContent = employees.length + (employees.length === 1 ? ' record' : ' records');
+
+      employees.forEach(emp => {
+        const dob = emp.dob ? new Date(emp.dob).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+        const initials = emp.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+        const colors = ['av-teal','av-blue','av-amber','av-coral','av-purple'];
+        const col = colors[emp.name.charCodeAt(0) % colors.length];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="tid">${emp.id}</td>
+          <td><div class="name-cell"><div class="avatar ${col}">${initials}</div><span>${emp.name}</span></div></td>
+          <td class="tmuted">${dob}</td>
+          <td><span class="dept-pill">${emp.dept}</span></td>
+          <td class="tmuted">${emp.skill}</td>
+          <td><div class="action-btns">
+            <button class="btn-edit" onclick="editEmployee('${emp.id}')">Edit</button>
+            <button class="btn-delete" onclick="deleteEmployee('${emp.id}')">Delete</button>
+          </div></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent  = employees.length;
+      document.getElementById('stat-eng').textContent    = employees.filter(e => e.dept === 'Engineering').length;
+      document.getElementById('stat-design').textContent = employees.filter(e => e.dept === 'Design').length;
+      document.getElementById('stat-other').textContent  = employees.filter(e => e.dept !== 'Engineering' && e.dept !== 'Design').length;
+    }
+
+    function clearForm() {
+      ['emp-id','emp-name','emp-dob','emp-dept','emp-skill','emp-password'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('emp-id').disabled = false;
+      hideMsg();
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('form-msg');
+      el.textContent = text;
+      el.className = 'form-msg ' + type;
+    }
+
+    function hideMsg() {
+      document.getElementById('form-msg').className = 'form-msg hidden';
+    }
+  </script>
+
+</body>
+</html>
